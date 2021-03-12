@@ -16,6 +16,7 @@ package = com.defold.example.basic3d
 [project]
 dependencies = 
 title = defold-byt3d
+custom_resources = /byt3d, /libs
 
 [physics]
 type = 3D

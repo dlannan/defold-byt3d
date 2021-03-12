@@ -1,29 +1,111 @@
+
+
+------------------------------------------------------------------------------------------------------------
+
+release       = "0"
+subversion    = "001"
+
+------------------------------------------------------------------------------------------------------------
+
+require("byt3d/scripts/platform/setup")
+
+------------------------------------------------------------------------------------------------------------
+-- Window width
+local WINwidth, WINheight, WINFullscreen = 1280, 720, 0
+
+------------------------------------------------------------------------------------------------------------
+-- Global because states need to use it themselves
+
+gSmgr = require("byt3d/scripts/platform/statemanager")
+
+------------------------------------------------------------------------------------------------------------
+-- Require all the states we will use for the game
+
+gSdisp 			= require("byt3d/scripts/states/common/display")
+local Smain 	= require("byt3d/scripts/states/application/sample01")
+--local Smain 	= require("scripts/states/appl3ication/sample02")
+
+------------------------------------------------------------------------------------------------------------
+
+gDir            = require("byt3d/scripts/utils/directory")
+
+---- States
+SobjMgr         = require("byt3d/scripts/states/common/object-manager")
+
+------------------------------------------------------------------------------------------------------------
+-- Register every state with the statemanager.
+
+gSmgr:Init()
+gSmgr:CreateState("Display", 		gSdisp)     -- This technically doesnt need to go to the statemanager
+gSmgr:CreateState("MainApp",		Smain)
+
+------------------------------------------------------------------------------------------------------------
+
+
+
 function init(self)
-	msg.post(".", "acquire_input_focus")
-	msg.post("@render:", "use_camera_projection")
-	msg.post("camera", "acquire_camera_focus")
+-- 	msg.post(".", "acquire_input_focus")
+-- 	msg.post("@render:", "use_camera_projection")
+-- 	msg.post("camera", "acquire_camera_focus")
+-- 
+-- 	-- rotate the cube
+-- 	go.animate(".", "euler.z", go.PLAYBACK_LOOP_FORWARD, 360, go.EASING_INOUTQUAD, 6)
+-- 	go.animate(".", "euler.x", go.PLAYBACK_LOOP_FORWARD, 360, go.EASING_INOUTQUAD, 9)
+-- 	go.animate(".", "euler.y", go.PLAYBACK_LOOP_FORWARD, 360, go.EASING_INOUTQUAD, 12)
+-- 
+-- 	-- tint the cube and the sphere
+-- 	model.set_constant("#cube", "tint", vmath.vector4(1,1,0,1))
+-- 	model.set_constant("#sphere", "tint", vmath.vector4(1,0,0,1))
+-- 	
+-- 	-- position directional light
+-- 	self.light = vmath.vector4(0, 0, go.get_position().z + 1, 0)
+-- 	model.set_constant("#cube", "light", self.light)
+-- 	model.set_constant("#quad", "light", self.light)
+-- 	model.set_constant("#sphere", "light", self.light)
 
-	-- rotate the cube
-	go.animate(".", "euler.z", go.PLAYBACK_LOOP_FORWARD, 360, go.EASING_INOUTQUAD, 6)
-	go.animate(".", "euler.x", go.PLAYBACK_LOOP_FORWARD, 360, go.EASING_INOUTQUAD, 9)
-	go.animate(".", "euler.y", go.PLAYBACK_LOOP_FORWARD, 360, go.EASING_INOUTQUAD, 12)
+	-- Init folder system
+	gDir:Init()
 
-	-- tint the cube and the sphere
-	model.set_constant("#cube", "tint", vmath.vector4(1,1,0,1))
-	model.set_constant("#sphere", "tint", vmath.vector4(1,0,0,1))
-	
-	-- position directional light
-	self.light = vmath.vector4(0, 0, go.get_position().z + 1, 0)
-	model.set_constant("#cube", "light", self.light)
-	model.set_constant("#quad", "light", self.light)
-	model.set_constant("#sphere", "light", self.light)
+	-- Init display first
+	gSdisp:Init(RENDER_WIDTH, RENDER_HEIGHT, 0)
+
+	gSdisp:Begin()
+	SobjMgr:Begin()
+
+	gSmgr:ChangeState("MainApp")
 end
 
 function on_input(self, action_id, action)
-	-- move directional light based on input
-	self.light.x = 2 * ((action.x - 480) / 480)
-	self.light.y = 2 * ((action.y - 320) / 320)
-	model.set_constant("#cube", "light", self.light)
-	model.set_constant("#quad", "light", self.light)
-	model.set_constant("#sphere", "light", self.light)
+	-- -- move directional light based on input
+	-- self.light.x = 2 * ((action.x - 480) / 480)
+	-- self.light.y = 2 * ((action.y - 320) / 320)
+	-- model.set_constant("#cube", "light", self.light)
+	-- model.set_constant("#quad", "light", self.light)
+	-- model.set_constant("#sphere", "light", self.light)
 end
+
+function update(self, dt)
+
+	if gSdisp:GetRunApp() and gSmgr:Run() then 
+
+		local buttons 	= gSdisp:GetMouseButtons()
+		local move 		= gSdisp:GetMouseMove()
+
+		gSdisp:PreRender()
+		gSmgr:Update(move.x, move.y, buttons)
+
+		SobjMgr:Render()
+		gSmgr:Render()
+
+		-- This does a buffer flip.
+		gSdisp:Flip()
+	end
+end
+
+function final(self)
+	SobjMgr:Finish()
+
+	gSdisp:Finish()
+	gDir:Finalize()
+end 
+

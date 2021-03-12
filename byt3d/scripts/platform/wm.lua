@@ -29,7 +29,8 @@ if ffi.os == "OSX" then
         egl.EGL_DEPTH_SIZE, egl.EGL_DONT_CARE,
         egl.EGL_NONE, egl.EGL_NONE
     }
-elseif ffi.os == "Windows" or ffi.os == "Linux" then
+end
+if ffi.os == "Windows" then
 
     --print('wm.display/dpy/r', wm.display, dpy, r)
     attrib_list = {
@@ -40,6 +41,39 @@ elseif ffi.os == "Windows" or ffi.os == "Linux" then
         egl.EGL_DEPTH_SIZE, 24,
         egl.EGL_NONE, egl.EGL_NONE
     }
+end
+
+if ffi.os == "Linux" then
+
+    --print('wm.display/dpy/r', wm.display, dpy, r)
+    attrib_list = {
+        --        egl.EGL_LEVEL, 0,
+        --        egl.EGL_SURFACE_TYPE, egl.EGL_WINDOW_BIT,
+        egl.EGL_RENDERABLE_TYPE, egl.EGL_OPENGL_ES2_BIT,
+        --        egl.EGL_NATIVE_RENDERABLE, egl.EGL_FALSE,
+        egl.EGL_DEPTH_SIZE, 24,
+        egl.EGL_NONE, egl.EGL_NONE
+    }
+
+    ffi.cdef[[
+    typedef struct void * Window;
+    typedef struct void * Display;
+    XGetInputFocus(void *d, void *w, int *revert_ti);
+    ]]
+    
+    function get_focus_window()
+        Window w;
+        revert_to  = ffi.new("int[1]");
+        print("getting input focus window ... ")
+        local res = ffi.C.XGetInputFocus(d, &w, &revert_to) -- // see man
+        if(res) then print("fail\n") end
+            exit(1);
+        else
+            print(string.format("success (window: %d)\n", w))
+        end
+        return w;
+    end 
+        
 end
 
 ------------------------------------------------------------------------------------------------------------
@@ -72,6 +106,9 @@ function InitSDL(ww, wh, fs)
 	sdl_image.IMG_Init( bit.bor(sdl_image.IMG_INIT_PNG, sdl_image.IMG_INIT_JPG) ) 
 
     local windowStruct = {}
+    -- Do this for each platform
+    windowStruct.window = dmGraphics::GetNativeX11Window()
+    
 	-- Update window function
 	windowStruct.Update = function()
 	
@@ -174,13 +211,17 @@ function InitEGL(wm)
     local n_cfg    		= ffi.new( "EGLint[1]"    )
 
     print('wm.window', wm.window)
+    local r0 			= egl.eglChooseConfig( dpy, cfg_attr, cfg, 1, n_cfg )
+    if(r0 == nil) then print("Cannot find valid config: ", egl.eglGetError()) end
 
     local attrValues 	= { egl.EGL_RENDER_BUFFER, egl.EGL_BACK_BUFFER, egl.EGL_NONE }
     local attrList 		= ffi.new( "EGLint[3]", attrValues)
 
-    local surf     		= egl.eglGetCurrentSurface( egl.EGL_READ )
+    -- local surf     		= egl.eglGetCurrentSurface( 1 )
+    -- if(surf == nil) then print("Cannot create surface: ", egl.eglGetError()) end
+    local surf     		= egl.eglCreateWindowSurface( dpy, cfg[0], wm.window, attrList )
     if(surf == nil) then print("Cannot create surface: ", egl.eglGetError()) end
-
+    
     attrValues 			= { egl.EGL_CONTEXT_CLIENT_VERSION, 2, egl.EGL_NONE }
     attrList 			= ffi.new( "EGLint[3]", attrValues)
 

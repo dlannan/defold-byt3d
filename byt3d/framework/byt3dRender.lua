@@ -21,7 +21,6 @@ require("byt3d/shaders/post_bloom")
 ------------------------------------------------------------------------------------------------------------
 
 local gl = require( "byt3d/ffi/OpenGLES2" )
-print("Render: ", gl, gl.GL_BLEND, gl.glDisable)
 
 ------------------------------------------------------------------------------------------------------------
 --~ 	/// <summary>
@@ -122,8 +121,6 @@ function byt3dRender:Init()
     self.renderPool = {}
     for k=1,self.POOL_BUFFERS do self.renderPool[k] = {} end
 
-    print("RenderBegin: ", gl, gl.GL_BLEND, gl.glDisable)
-    
     gl.glDisable(gl.GL_BLEND)
     gl.glEnable(gl.GL_DEPTH_TEST)
     gl.glDepthMask(gl.GL_TRUE)

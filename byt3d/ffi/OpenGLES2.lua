@@ -534,5 +534,4 @@ ffi.cdef[[
       void         glViewport (GLint x, GLint y, GLsizei width, GLsizei height);
 ]]
 
-print("FFI: ", gles2, gles2.GL_BLEND, gles2.glDisable)
 return gles2

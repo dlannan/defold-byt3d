@@ -10,6 +10,7 @@
 
 require("byt3d/scripts/platform/wm")
 require("byt3d/shaders/base")
+local gl = require( "byt3d/ffi/OpenGLES2" )
 	
 ------------------------------------------------------------------------------------------------------------
 
@@ -26,7 +27,7 @@ SDisplay.WINheight			= 480
 SDisplay.WINFullscreen		= 0
 
 SDisplay.initComplete 		= false
-SDisplay.runApp				= true
+SDisplay.runApp				= function() return true end 
 
 ------------------------------------------------------------------------------------------------------------
 
@@ -44,12 +45,14 @@ function SDisplay:Begin()
 
 	-- Assert that we have valid width and heights (simple protection)
 	assert(self.initComplete == true, "Init function not called.")
+	self.wm = InitSDL(SDisplay.WINwidth-1, SDisplay.WINheight, SDisplay.WINFullscreen)
+	self.eglInfo 	= InitEGL(self.wm)
+	
+	self.runApp 	= self.wm.Update
+	self.exitApp 	= self.wm.Exit
+	self.flipApp 	= self.wm.Swapbuffers
 
-	self.runApp 	= function() end 
-    self.exitApp 	= function() end 
-    self.flipApp 	= function() end
-
---	gl.glClearColor ( 0.0, 0.0, 0.0, 0.0 )
+	gl.glClearColor ( 0.0, 0.0, 0.0, 0.0 )
 end
 
 ------------------------------------------------------------------------------------------------------------

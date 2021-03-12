@@ -39,6 +39,7 @@ function Ssample1:Begin()
 	self.sprite.color = ffi.new("Colorf", { 1, 0, 1, 1 })
 
 	self.bg = byt3dSprite:New("img2", "byt3d/data/images/surfaces/wood-oak.png")
+	print("IMAGE: ", self.bg)
 	-- Reassign the size and uishader to something a little different :)
 	self.bg.color = ffi.new("Colorf", { 0, 1, 0, 1 })
 	self.bg.xscale = 2.0

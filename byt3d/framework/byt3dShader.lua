@@ -177,7 +177,7 @@ function byt3dShader:LoadShaders()
 		local vs = self:LoadAShader( self.vertCode, gl.GL_VERTEX_SHADER )
 		local fs = self:LoadAShader( self.fragCode, gl.GL_FRAGMENT_SHADER )
 		local prog = gl.glCreateProgram()
-		
+
 		gl.glAttachShader( prog, vs )
 		gl.glAttachShader( prog, fs )
 		

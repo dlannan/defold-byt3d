@@ -65,14 +65,14 @@ function init(self)
 
 	-- Init folder system
 	gDir:Init()
-
+	
 	-- Init display first
 	gSdisp:Init(RENDER_WIDTH, RENDER_HEIGHT, 0)
 
 	gSdisp:Begin()
 	SobjMgr:Begin()
 
-	gSmgr:ChangeState("MainApp")
+	gSmgr:ChangeState("MainApp")    	
 end
 
 function on_input(self, action_id, action)

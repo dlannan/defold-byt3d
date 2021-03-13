@@ -56,24 +56,67 @@ if ffi.os == "Linux" then
     }
 
     ffi.cdef[[
-    typedef struct void * Window;
-    typedef struct void * Display;
-    XGetInputFocus(void *d, void *w, int *revert_ti);
+    // Types from various headers
+    typedef struct _Display Display;
+    typedef struct _XImage XImage;
+
+    typedef struct {
+        unsigned long pixel;
+        unsigned short red, green, blue;
+        char flags;  /* do_red, do_green, do_blue */
+        char pad;
+    } XColor; // Xlib.h
+
+    typedef unsigned long XID; // Xdefs.h
+    typedef XID Window;       // X.h
+    typedef XID Drawable;     // X.h
+    typedef XID Colormap;     // X.h
+
+    // Functions from Xlib.h
+    Display *XOpenDisplay(char*       /* display_name */ );
+    int XDefaultScreen( Display*      /* display */ );
+    Window XRootWindow( Display*      /* display */, int  /* screen_number */ );
+    XImage *XGetImage( Display* ,  Drawable, int, int, unsigned int, unsigned int, unsigned long, int );
+    int XFree( void* );
+    int XQueryColor( Display*, Colormap, XColor* );
+    Colormap XDefaultColormap(    Display*, int );
+    
+    // Functions from Xutil.h
+    unsigned long XGetPixel(XImage *ximage, int x, int y);
+    void XGetInputFocus(Display *d, Window *w, int *revert_ti);
+    int XQueryTree(Display *display, Window w, Window *root_return, Window *parent_return, Window **children_return, unsigned int *nchildren_return);
     ]]
     
-    function get_focus_window()
-        Window w;
-        revert_to  = ffi.new("int[1]");
+    function get_focus_window(d)
+
+        -- local w = ffi.C.XRootWindow(d, 0)
+        local w = ffi.new("Window[1]")
+        local revert_to  = ffi.new("int[1]")
         print("getting input focus window ... ")
-        local res = ffi.C.XGetInputFocus(d, &w, &revert_to) -- // see man
-        if(res) then print("fail\n") end
-            exit(1);
-        else
-            print(string.format("success (window: %d)\n", w))
+        ffi.C.XGetInputFocus(d, w, revert_to)
+        if(w) then print("success:\n", d, w) end
+        return w[0]
+    end
+
+    function get_topmost_window( d, start )
+
+        local w = start
+        local parent = ffi.new("Window[1]", start)
+        local root = ffi.new("Window[1]")
+        local children = ffi.new("Window *[1]")
+        local nchildren = ffi.new("unsigned int[1]")
+
+        print("getting top window ... ")
+        while (parent[0] ~= root[0]) do
+            w = parent[0]
+            s = ffi.C.XQueryTree(d, w, root, parent, children, nchildren)
+            if (s) then ffi.C.XFree(children[0]) end
+            print("  get parent (window: %d)", w)
         end
-        return w;
-    end 
-        
+
+        print("success (window: %d)", w)
+        return w
+    end
 end
 
 ------------------------------------------------------------------------------------------------------------
@@ -107,15 +150,22 @@ function InitSDL(ww, wh, fs)
 
     local windowStruct = {}
     -- Do this for each platform
-    windowStruct.window = dmGraphics::GetNativeX11Window()
+    local d = ffi.C.XOpenDisplay(nil)
+    local w = get_focus_window(d)
+    w = get_topmost_window( d, w )
+    windowStruct.window = w
+
+    windowStruct.Swapbuffers = function()
+    end
     
-	-- Update window function
-	windowStruct.Update = function()
-	
-		-- Calculate the frame rate
-		prev_time, curr_time = curr_time, os.clock()
-		WM_frameMs = curr_time - prev_time + 0.00001
-		WM_fps = 1.0/WM_frameMs
+    -- Update window function
+    windowStruct.Update = function()
+
+        -- Calculate the frame rate
+        curr_time = os.clock()
+        prev_time = curr_time
+        WM_frameMs = curr_time - prev_time + 0.00001
+        WM_fps = 1.0/WM_frameMs
 
         -- Clear the KeyBuffers every frame - we dont keep crap lying around (do it yourself if you want!!)
         windowStruct.KeyUp			= {}
@@ -192,10 +242,8 @@ end
 
 function InitEGL(wm)
 
-    print('DISPLAY',wm.display)
     wm.display = egl.EGL_DEFAULT_DISPLAY
     
-
     -- Need this for latest EGL support
     if(ffi.os == "Windows") then ffi.C.LoadLibraryA("d3dcompiler_43.dll") end
 
@@ -210,16 +258,13 @@ function InitEGL(wm)
     local cfg      		= ffi.new( "EGLConfig[1]" )
     local n_cfg    		= ffi.new( "EGLint[1]"    )
 
-    print('wm.window', wm.window)
     local r0 			= egl.eglChooseConfig( dpy, cfg_attr, cfg, 1, n_cfg )
     if(r0 == nil) then print("Cannot find valid config: ", egl.eglGetError()) end
 
     local attrValues 	= { egl.EGL_RENDER_BUFFER, egl.EGL_BACK_BUFFER, egl.EGL_NONE }
     local attrList 		= ffi.new( "EGLint[3]", attrValues)
 
-    -- local surf     		= egl.eglGetCurrentSurface( 1 )
-    -- if(surf == nil) then print("Cannot create surface: ", egl.eglGetError()) end
-    local surf     		= egl.eglCreateWindowSurface( dpy, cfg[0], wm.window, attrList )
+    local surf     		= egl.eglCreateWindowSurface( dpy, cfg[0], ffi.cast("void *", wm.window), attrList )
     if(surf == nil) then print("Cannot create surface: ", egl.eglGetError()) end
     
     attrValues 			= { egl.EGL_CONTEXT_CLIENT_VERSION, 2, egl.EGL_NONE }
@@ -228,13 +273,14 @@ function InitEGL(wm)
     local cfg_ctx   	= egl.eglCreateContext( dpy, cfg[0], nil, attrList )
     if(cfg_ctx == nil) then print("Cannot create EGL Context:", egl.eglGetError()) end
 
-    local r        		= egl.eglMakeCurrent( dpy, surf, surf, cfg_ctx )
-    --print('surf/ctx', surf, r0, ctx, r, n_cfg[0])
-
-    local dpymode       = ffi.new("SDL_DisplayMode[1]")
-    local currdpy       = sdl.SDL_GetCurrentDisplayMode();
-    local res           = sdl.SDL_GetDesktopDisplayMode(currdpy, dpymode)
-    print("Screen Display:", dpymode[0].w, dpymode[0].h, dpymode[0].refresh_rate)
+local r        		= egl.eglMakeCurrent( dpy, surf, surf, cfg_ctx )
+print('surf/ctx', surf, r0, ctx, r, n_cfg[0])
+-- 
+--     local dpymode       = ffi.new("SDL_DisplayMode[1]")
+--     local currdpy       = sdl.SDL_GetCurrentDisplayMode();
+--     local res           = sdl.SDL_GetDesktopDisplayMode(currdpy, dpymode)
+--     print("Screen Display:", dpymode[0].w, dpymode[0].h, dpymode[0].refresh_rate)
+-- 
 
     -- Enable "Free Running" mode - non VSync
     egl.eglSwapInterval( dpy, 0 )
@@ -244,6 +290,6 @@ function InitEGL(wm)
     wm.context = cfg_ctx
     wm.display = dpy
 
-    return { surf=surf, ctx=cfg_ctx, dpy=dpy, config=cfg[0], rconf=r, display=dpymode[0] }
+    return { surf=surf, ctx=cfg_ctx, dpy=dpy }
 end
 ------------------------------------------------------------------------------------------------------------

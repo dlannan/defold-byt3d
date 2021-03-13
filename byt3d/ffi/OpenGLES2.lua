@@ -1,7 +1,7 @@
 
 --local ffi   = package.preload.ffi()
 local libs  = ffi_gles2_libs or {
-   OSX     = { x64 = "libs/osx/gles2.dylib" },
+   OSX      = { x64 = "libs/osx/gles2.dylib" },
    Windows  = { x64 = "libs/windows/x64/libGLESv2.dll" },
    Linux    = { x64 = "libs/linux/x64/libGLESv2.so" }
 }

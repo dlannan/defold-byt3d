@@ -53,34 +53,33 @@ function byt3dSprite:New(name, imageFile)
 	newSpr.name = name
 	newSpr.imageFile = imageFile
 	
-	-- Load and build the shader for GUI 2D Rendering
-	newSpr.uiShader = byt3dShader:NewProgram( colour_shader, gui_shader )
-	newSpr.uiShader.name = "Shader_Sprite"
-
-    -- Find the shader parameters we will use
-	newSpr.loc_position = newSpr.uiShader.vertexArray
-	newSpr.loc_texture  = newSpr.uiShader.texCoordArray[0]
-
-	newSpr.loc_res      = newSpr.uiShader.loc_res
-	newSpr.loc_time     = newSpr.uiShader.loc_time
-	newSpr.colorArray   = newSpr.uiShader.colorArray
-	
-	newSpr.color 		= ffi.new("Colorf", { 1,1,1,1 })
-
-	newSpr.alpha_src 	= gl.GL_SRC_ALPHA
-	newSpr.alpha_dst 	= gl.GL_ONE_MINUS_SRC_ALPHA
-	
-	local tex0 = byt3dTexture:New()
-	tex0:FromSDLImage(newSpr.name, newSpr.imageFile)
-	
+-- 	-- Load and build the shader for GUI 2D Rendering
+-- 	newSpr.uiShader = byt3dShader:NewProgram( colour_shader, gui_shader )
+-- 	newSpr.uiShader.name = "Shader_Sprite"
+-- 
+--     -- Find the shader parameters we will use
+-- 	newSpr.loc_position = newSpr.uiShader.vertexArray
+-- 	newSpr.loc_texture  = newSpr.uiShader.texCoordArray[0]
+-- 
+-- 	newSpr.loc_res      = newSpr.uiShader.loc_res
+-- 	newSpr.loc_time     = newSpr.uiShader.loc_time
+-- 	newSpr.colorArray   = newSpr.uiShader.colorArray
+-- 	
+-- 	newSpr.color 		= ffi.new("Colorf", { 1,1,1,1 })
+-- 
+-- 	newSpr.alpha_src 	= gl.GL_SRC_ALPHA
+-- 	newSpr.alpha_dst 	= gl.GL_ONE_MINUS_SRC_ALPHA
+-- 	
+-- 	local tex0 = byt3dTexture:New()
+-- 	tex0:FromSDLImage(newSpr.name, newSpr.imageFile)
+-- 	
     newSpr.mesh = byt3dMesh:New()
-    newSpr.mesh:SetShader(newSpr.uiShader)
-    newSpr.mesh:SetTexture(tex0)
+    -- newSpr.mesh:SetShader(newSpr.uiShader)
+    -- newSpr.mesh:SetTexture(tex0)
     newSpr.mesh.alpha = 1.0
 
-	newSpr.xscale = tex0.w / gSdisp.WINwidth
-	newSpr.yscale = tex0.h / gSdisp.WINheight
-	return newSpr
+	-- newSpr.xscale = tex0.w / gSdisp.WINwidth
+	-- newSpr.yscale = tex0.h / gSdisp.WINheight
 end
 
 ------------------------------------------------------------------------------------------------------------

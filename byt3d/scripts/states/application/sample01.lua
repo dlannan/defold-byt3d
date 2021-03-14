@@ -34,21 +34,21 @@ function Ssample1:Begin()
 	byt3dRender:Init()
 	
 	self.sprite = byt3dSprite:New("img1", "byt3d/data/images/galaxy/star.png")
-	self.sprite.mesh.alpha 	= 0.5	
-	self.sprite.alpha_src 	= gl.GL_ONE
-	self.sprite.alpha_dst 	= gl.GL_DST_COLOR
-	self.sprite.color = ffi.new("Colorf", { 1, 0, 1, 1 })
+	-- self.sprite.mesh.alpha 	= 0.5	
+	-- self.sprite.alpha_src 	= gl.GL_ONE
+	-- self.sprite.alpha_dst 	= gl.GL_DST_COLOR
+	-- self.sprite.color = ffi.new("Colorf", { 1, 0, 1, 1 })
 
 	self.bg = byt3dSprite:New("img2", "byt3d/data/images/surfaces/wood-oak.png")
 	print("IMAGE: ", self.bg)
 	-- Reassign the size and uishader to something a little different :)
-	self.bg.color = ffi.new("Colorf", { 0, 1, 0, 1 })
-	self.bg.xscale = 2.0
-	self.bg.yscale = 2.0
-	self.bg.uiShader = byt3dShader:NewProgram( colour_shader, liquid_blue_shader_frag )
-	self.bg.mesh:SetShader(self.bg.uiShader)
+	-- self.bg.color = ffi.new("Colorf", { 0, 1, 0, 1 })
+	-- self.bg.xscale = 2.0
+	-- self.bg.yscale = 2.0
+	-- self.bg.uiShader = byt3dShader:NewProgram( colour_shader, liquid_blue_shader_frag )
+	-- self.bg.mesh:SetShader(self.bg.uiShader)
 
-	byt3dShader:ValidateProgram(self.bg.uiShader.info.prog)
+	-- byt3dShader:ValidateProgram(self.bg.uiShader.info.prog)
 end
 
 ------------------------------------------------------------------------------------------------------------

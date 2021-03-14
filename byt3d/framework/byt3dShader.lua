@@ -12,7 +12,7 @@
 --       Whole thing needs a bit of a tidy-up.
 
 --local ffi 	= package.preload.ffi()
-local gl   	= require( "byt3d/ffi/OpenGLES2" )
+local gl   	= nil --require( "byt3d/ffi/OpenGLES2" )
 
 ------------------------------------------------------------------------------------------------------------
 --	/// <summary>

@@ -14,9 +14,9 @@ input_method = HiddenInputField
 package = com.defold.example.basic3d
 
 [project]
-dependencies = 
+dependencies = https://url.to/library
 title = defold-byt3d
-custom_resources = /byt3d, /libs
+custom_resources = /byt3d
 
 [physics]
 type = 3D

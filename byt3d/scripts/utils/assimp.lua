@@ -7,7 +7,7 @@
 
 ------------------------------------------------------------------------------------------------------------
 
-local gl   = require( "byt3d/ffi/OpenGLES2" )
+local gl   = nil --require( "byt3d/ffi/OpenGLES2" )
 
 require("byt3d/framework/byt3dModel")
 require("byt3d/framework/byt3dMesh")

@@ -4,9 +4,9 @@
 
 ------------------------------------------------------------------------------------------------------------
 
-sdl = require( "byt3d/ffi/sdl" )
-sdl_image = require("byt3d/ffi/sdl_image")
-egl = require( "byt3d/ffi/egl" )
+-- sdl = require( "byt3d/ffi/sdl" )
+-- sdl_image = require("byt3d/ffi/sdl_image")
+-- egl = require( "byt3d/ffi/egl" )
 
 ------------------------------------------------------------------------------------------------------------
 -- This is global.. because it damn well should be!!!

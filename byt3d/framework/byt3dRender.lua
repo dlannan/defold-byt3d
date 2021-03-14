@@ -18,9 +18,40 @@ require("byt3d/shaders/shadow_vsm_storedepth")
 require("byt3d/shaders/base_models")
 require("byt3d/shaders/post_bloom")
 
+
+local b3v     = require("byt3d/scripts/platform/byt3dVulkan")
 ------------------------------------------------------------------------------------------------------------
 
-local gl = require( "byt3d/ffi/OpenGLES2" )
+-- 
+-- local function makeApi()
+--     local f = io.open("vulkan1api.lua", "wt")
+--     local def = vkh.cleanup( vkh.gsubplatforms(vkh.core, "") )..
+--     vkh.cleanup( vkh.gsubplatforms(vkh.extensions, "") )
+--     f:write("--[[")
+--     f:write(def:gsub("__stdcall",""))
+--     f:write("]]")
+--     f:close()
+-- end
+-- -- makeApi()
+-- 
+-- local test = vku.newStruct("VkBufferMemoryBarrier")
+-- print(test.sType, test.pNext)
+-- 
+-- ffi.cdef "typedef struct PackTest { VkMemoryAllocateInfo allocInfo; VkSubmitInfo submit; } PackTest;"
+-- local reftest = ffi.new("PackTest")
+-- vku.fillStruct(reftest.submit)
+-- assert(reftest.submit.sType == vk.VK_STRUCTURE_TYPE_SUBMIT_INFO)
+-- 
+-- local extfuncs = vku.loadExtensions(
+-- function(name) 
+--     --return ffi.cast("void*",0)
+--     return string.len(name) 
+-- end)
+-- pprint("VK Extensions: ", extfuncs.vkRegisterObjectsNVX)
+
+------------------------------------------------------------------------------------------------------------
+-- TODO: Replace gl with vulkan calls
+local gl = nil --require( "byt3d/ffi/OpenGLES2" )
 
 ------------------------------------------------------------------------------------------------------------
 --~ 	/// <summary>
@@ -121,55 +152,58 @@ function byt3dRender:Init()
     self.renderPool = {}
     for k=1,self.POOL_BUFFERS do self.renderPool[k] = {} end
 
-    gl.glDisable(gl.GL_BLEND)
-    gl.glEnable(gl.GL_DEPTH_TEST)
-    gl.glDepthMask(gl.GL_TRUE)
-
+    b3v:Init()
     -- Setup internal shaders - useful for various render methods
-    self.colourShader = byt3dShader:NewProgram(colour_shader_vert, colour_shader_frag)
-    self:ChangeShader(self.colourShader)
-	
-	self.defShader = byt3dShader:NewProgram( colour_shader, gui_shader )
-	self.defShader.name = "Shader_Default"
-
-    self.bloomShader = byt3dShader:NewProgram(colour_shader, post_bloom_shader_frag)
-    self.bloomtex = byt3dTexture:NewColourTextures(512, 512)
-
+ --    self.colourShader = byt3dShader:NewProgram(colour_shader_vert, colour_shader_frag)
+ --    self:ChangeShader(self.colourShader)
+	-- 
+-- 	self.defShader = byt3dShader:NewProgram( colour_shader, gui_shader )
+-- 	self.defShader.name = "Shader_Default"
+-- 
+--     self.bloomShader = byt3dShader:NewProgram(colour_shader, post_bloom_shader_frag)
+--     self.bloomtex = byt3dTexture:NewColourTextures(512, 512)
+-- 
     -- Internally used render function by default is without shadows
     byt3dRender.RenderInternal  = byt3dRender.RenderNoShadows
     local SH = self.shadows
-
-    -- Add a light to the rendering - this should probably go in the Level?
-    --  TODO: Move to level code (I think)
-    self.lights["sun"] = byt3dCamera:New()
-    self.lights["sun"]:InitPerspective(50, 1, 1, 40.0)
-    self.lights["sun"]:SetupView(0, 0, self.shadows.RENDER_WIDTH * self.shadows.SHADOW_MAP_COEF, self.shadows.RENDER_HEIGHT * self.shadows.SHADOW_MAP_COEF)
-    self.lights["sun"]:LookAt( { 13, 10, 13 }, { 0.0, 0.0, 0.0 } )
-
+-- 
+--     -- Add a light to the rendering - this should probably go in the Level?
+--     --  TODO: Move to level code (I think)
+--     self.lights["sun"] = byt3dCamera:New()
+--     self.lights["sun"]:InitPerspective(50, 1, 1, 40.0)
+--     self.lights["sun"]:SetupView(0, 0, self.shadows.RENDER_WIDTH * self.shadows.SHADOW_MAP_COEF, self.shadows.RENDER_HEIGHT * self.shadows.SHADOW_MAP_COEF)
+--     self.lights["sun"]:LookAt( { 13, 10, 13 }, { 0.0, 0.0, 0.0 } )
+-- 
     -- Prepare some shadow shaders and textures
-    SH.storeMomentsShader = byt3dShader:NewProgram(shadow_vsm_storedepth_vert, shadow_vsm_storedepth_frag)
-    SH.shadowShader = byt3dShader:NewProgram(shadow_vsm_vert, shadow_vsm_frag)
-    SH.blurShader = byt3dShader:NewProgram(shadow_vsm_blur_vert, shadow_vsm_blur_frag)
+--     SH.storeMomentsShader = byt3dShader:NewProgram(shadow_vsm_storedepth_vert, shadow_vsm_storedepth_frag)
+--     SH.shadowShader = byt3dShader:NewProgram(shadow_vsm_vert, shadow_vsm_frag)
+--     SH.blurShader = byt3dShader:NewProgram(shadow_vsm_blur_vert, shadow_vsm_blur_frag)
+-- 
+    -- local shadowMapWidth = byt3dRender.shadows.RENDER_WIDTH * byt3dRender.shadows.SHADOW_MAP_COEF
+    -- local shadowMapHeight = byt3dRender.shadows.RENDER_HEIGHT * byt3dRender.shadows.SHADOW_MAP_COEF
+    -- SH.tex = byt3dTexture:NewDepthTextures(shadowMapWidth, shadowMapHeight)
+    -- self.initialised     = true
 
-    local shadowMapWidth = byt3dRender.shadows.RENDER_WIDTH * byt3dRender.shadows.SHADOW_MAP_COEF
-    local shadowMapHeight = byt3dRender.shadows.RENDER_HEIGHT * byt3dRender.shadows.SHADOW_MAP_COEF
-    SH.tex = byt3dTexture:NewDepthTextures(shadowMapWidth, shadowMapHeight)
-    self.initialised     = true
-
-    SH.blurtex = byt3dTexture:NewColourTextures(shadowMapWidth, shadowMapHeight)
-
+--     SH.blurtex = byt3dTexture:NewColourTextures(shadowMapWidth, shadowMapHeight)
+-- 
+--     -- Get the uniform handles for the parameters that will be modifiable
+--     SH.shadowMapUniform = gl.glGetUniformLocation(SH.shadowShader.info.prog,"ShadowMap")
+--     SH.shadowMapTexMat = gl.glGetUniformLocation(SH.shadowShader.info.prog,"u_TextureMatrix")
+-- --    SH.shadowMapStepXUniform = gl.glGetUniformLocation(SH.shadowShader.info.prog,"xPixelOffset")
+-- --    SH.shadowMapStepYUniform = gl.glGetUniformLocation(SH.shadowShader.info.prog,"yPixelOffset")
+-- 
     -- Get the uniform handles for the parameters that will be modifiable
-    SH.shadowMapUniform = gl.glGetUniformLocation(SH.shadowShader.info.prog,"ShadowMap")
-    SH.shadowMapTexMat = gl.glGetUniformLocation(SH.shadowShader.info.prog,"u_TextureMatrix")
---    SH.shadowMapStepXUniform = gl.glGetUniformLocation(SH.shadowShader.info.prog,"xPixelOffset")
---    SH.shadowMapStepYUniform = gl.glGetUniformLocation(SH.shadowShader.info.prog,"yPixelOffset")
-
-    -- Get the uniform handles for the parameters that will be modifiable
-    SH.scaleUniform = gl.glGetUniformLocation(SH.blurShader.info.prog,"u_Scale")
-
+--     SH.scaleUniform = gl.glGetUniformLocation(SH.blurShader.info.prog,"u_Scale")
+-- 
     -- Allocate a texture id for the surface to render to.
     SH.mesh = byt3dMesh:New()
     SH.mesh:SetShader(self.defShader)
+end
+
+------------------------------------------------------------------------------------------------------------
+
+function byt3dRender:Finish()
+    vk.vkDestroyInstance(self.inst[0], NULL)
 end
 
 ------------------------------------------------------------------------------------------------------------

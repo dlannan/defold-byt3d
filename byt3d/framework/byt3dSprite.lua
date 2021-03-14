@@ -11,7 +11,7 @@
 ------------------------------------------------------------------------------------------------------------
 
 --local ffi 	= package.preload.ffi()
-local gl = require( "byt3d/ffi/OpenGLES2" )
+local gl = nil --require( "byt3d/ffi/OpenGLES2" )
 
 ------------------------------------------------------------------------------------------------------------
 -- Do not assign a camera, a default one is created.
